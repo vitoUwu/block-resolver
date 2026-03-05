@@ -1,5 +1,5 @@
 {
-  "resolverId": "app/loaders/echo",
+  "resolverId": "example/loaders/echo",
   "props": {
     "message": "Hello, world!"
   }

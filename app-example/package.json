@@ -1,0 +1,11 @@
+{
+  "name": "@app-example/app-example",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "manifest:generate": "bunx block-resolver-manifest ."
+  },
+  "dependencies": {
+    "@block-resolver/core": "workspace:*"
+  }
+}

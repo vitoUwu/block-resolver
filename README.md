@@ -1,81 +1,95 @@
 # Block Resolver
 
-This project is a study case runtime inspired by [Deco.cx](https://github.com/deco-cx/deco), designed to interpret and resolve "blocks" — modular functions that power your application. It serves as a study case to understand how a block-based architecture, like the one used in Deco.cx CMS for building storefronts, works under the hood.
+This project is a block runtime inspired by Deco-style composition, with
+first-party app installation and resolver-driven configuration.
 
-## Features
+## Packages
 
-- **Block-Based Architecture**: Modular design where functionality is encapsulated in blocks.
-- **Automatic Manifest Generation**: Scans your project for blocks and generates a manifest file (`manifest.gen.ts`). Note: Currently, this manifest generation is primarily a challenge in programmatically building TypeScript files and isn't strictly used for runtime resolution in this version.
-- **Loader Support**: currently supports `loaders` for data fetching with built-in caching strategies.
-- **Smart Caching**: `stale-while-revalidate` caching strategy implementation for high-performance data loading.
-- **Universal Invocation**: Built-in HTTP handler to invoke any block via API.
+- `@block-resolver/core`: manifest/runtime/resolution/install APIs
+- `@block-resolver/web`: HTTP invoke routing (`/invoke/*`) for Bun fetch
+- `@block-resolver/react`: React server renderer for sections/pages
+- `example`: reference site that installs `app-example`
+- `app-example`: installable app with `mod.ts`, loaders, and actions
 
-## Project Structure
+## First-party app installation (current model)
 
-- **`blocks/`**: Core definitions of block types (e.g., `LoaderBlock`).
-- **`resolver/`**: Logic to instantiate and manage blocks at runtime.
-- **`manifest/`**: Tools to generate the registry of available blocks.
-- **`routes/`**: API routes, including the universal `/invoke/*` handler.
-- **`utils/`**: Helper functions.
+The site (`example`) installs apps through config + blocks, not by hardcoded
+imports/parsing in server startup.
 
-## How it Works
+### 1) Declare installed apps in site config
 
-### 1. Creating a Block (Loader)
-Create a file in your project (e.g., `loaders/myLoader.ts`). A loader is a simple function that returns data.
+`example/block-resolver.app.json`
 
-```typescript
-export interface Props {
-  id: string;
-}
-
-export default function myLoader(props: Props, req: Request, ctx: any) {
-  return {
-    data: `Hello user ${props.id}`,
-    timestamp: Date.now()
-  };
-}
-
-// Optional: Configure caching
-export const cache = {
-  type: "stale-while-revalidate",
-  ttl: 60 * 1000, // 1 minute
-  key: (props) => props.id, // Cache key based on props
-};
-```
-
-### 2. Resolution & Manifest
-When the runtime starts, `BlockResolver.init()` builds a manifest, mapping block IDs to their implementations.
-
-### 3. Invoking a Block
-You can execute any resolved block via the `/invoke` endpoint.
-
-**GET Request:**
-```
-GET /invoke/loaders/myLoader?id=123
-```
-
-**POST Request:**
-```
-POST /invoke/loaders/myLoader
-Content-Type: application/json
-
+```json
 {
-  "id": "123"
+  "name": "example",
+  "apps": ["app-example"]
 }
 ```
 
-## Core Concepts
+### 2) Expose app entrypoint from site `apps/`
 
-### Loaders
-Loaders are blocks responsible for fetching data. They are designed to be pure, idempotent, and cacheable. The runtime handles the caching logic automatically based on the exported `cache` configuration.
+`example/apps/app-example.ts`
 
-### Invocation Handler
-The `routes/invoke.ts` file provides a unified entry point to execute blocks. It handles:
-- Parsing request props (from URL params or JSON body).
-- Resolving the requested block by ID.
-- Executing the block with the provided context.
-- Returning the response (JSON or raw).
+```ts
+export { default } from "../../app-example/mod.ts";
+```
 
----
+### 3) Configure app props in `.blocks`
 
-*Note: This is a simplified educational implementation and is not intended for production use equivalent to the full Deco.cx runtime.*
+`example/.blocks/app-example.json`
+
+```json
+{
+  "resolverId": "core/apps/app-example",
+  "props": {
+    "apiBaseUrl": "https://httpbin.org",
+    "token": {
+      "resolverId": "app-example/loaders/encrypted",
+      "props": {
+        "name": "APP_EXAMPLE_TOKEN",
+        "encrypted": "replace-with-encrypted-output"
+      }
+    }
+  }
+}
+```
+
+### 4) Install at startup
+
+```ts
+const state = await init({
+  appName: "example",
+  manifestRoots: ["./", "../app-example"],
+});
+
+const installed = await installConfiguredApps(state, {
+  manifestRoots: ["./", "../app-example"],
+});
+```
+
+Use `installed.ctx` when building request context.
+
+## App coding model (`mod.ts`)
+
+Installable apps export a default `App(state)` function that returns:
+
+- `manifest`
+- `state` (can include nested resolvables)
+- optional `init(resolvedState)` returning app context additions
+
+This is implemented in `app-example/mod.ts`.
+
+## Resolver types
+
+- `loaders`
+- `actions`
+- `sections`
+- `pages`
+- `apps` (`core/apps/*` for installation)
+
+## Documentation by package
+
+- Core runtime and app install details: `packages/core/README.md`
+- HTTP adapter: `packages/web/README.md`
+- Installable app internals: `app-example/README.md`

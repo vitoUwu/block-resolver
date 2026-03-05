@@ -1,0 +1,13 @@
+{
+  "resolverId": "core/apps/app-example",
+  "props": {
+    "apiBaseUrl": "https://httpbin.org",
+    "token": {
+      "resolverId": "app-example/loaders/encrypted",
+      "props": {
+        "name": "APP_EXAMPLE_TOKEN",
+        "encrypted": "replace-with-app-example/actions/secrets/encrypt output"
+      }
+    }
+  }
+}

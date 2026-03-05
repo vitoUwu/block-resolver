@@ -3,8 +3,15 @@
   "version": "0.0.0",
   "type": "module",
   "module": "src/index.ts",
+  "scripts": {
+    "manifest:generate": "bun ./src/cli/generate-manifest.ts"
+  },
+  "bin": {
+    "block-resolver-manifest": "./src/cli/generate-manifest.ts"
+  },
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./scripts/generate-manifest": "./src/cli/generate-manifest.ts"
   },
   "peerDependencies": {
     "typescript": "^5"

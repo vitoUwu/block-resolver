@@ -1,22 +1,23 @@
-import type { ReactNode } from "react";
-import { renderToReadableStream } from "react-dom/server";
-
 interface Props {
   path: string;
   name: string;
-  sections: ReactNode[];
+  sections: string[];
 }
 
-export default async function Page(props: Props, _req: Request, ctx: any) {
-  const stream = await renderToReadableStream(
+export default function Page(props: Props) {
+  return (
     <html>
-      <body>{props.sections}</body>
-    </html>,
+      <head>
+        <title>{props.name}</title>
+      </head>
+      <body>
+        {props.sections.map((sectionHtml, index) => (
+          <div
+            key={index}
+            dangerouslySetInnerHTML={{ __html: sectionHtml }}
+          />
+        ))}
+      </body>
+    </html>
   );
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/html",
-    },
-  });
 }

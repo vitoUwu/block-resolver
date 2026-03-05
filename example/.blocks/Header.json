@@ -1,0 +1,14 @@
+{
+  "resolverId": "example/sections/header",
+  "props": {
+    "title": {
+      "resolverId": "app-example/actions/title",
+      "props": {
+        "value": "My Website"
+      }
+    },
+    "subtitle": {
+      "resolverId": "app-example/loaders/current-token"
+    }
+  }
+}

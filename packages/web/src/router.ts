@@ -27,6 +27,11 @@ function normalizeBasePath(basePath: string): string {
   return basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
 }
 
+function normalizePathname(pathname: string): string {
+  if (pathname === "/") return "/";
+  return pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+}
+
 async function readProps(request: Request): Promise<Record<string, unknown>> {
   if (request.method === "GET") {
     const url = new URL(request.url);
@@ -51,6 +56,57 @@ function toResponse(result: unknown): Response {
   return Response.json(result ?? null);
 }
 
+function getResolverTypeFromId(resolverId: ResolverId): string | null {
+  const [, resolverType] = resolverId.split("/");
+  return resolverType ?? null;
+}
+
+function isLikelyGlobalBlockId(resolverId: ResolverId): boolean {
+  const [appName, resolverType, ...rest] = resolverId.split("/");
+  return !!appName && !resolverType && rest.length === 0;
+}
+
+function isSectionsResolverRequest<TContext extends ResolverContext>(
+  state: State<TContext & WebContext>,
+  resolverId: ResolverId,
+): boolean {
+  const resolverType = getResolverTypeFromId(resolverId);
+  if (resolverType === "sections" || resolverType === "pages") {
+    return true;
+  }
+
+  if (!isLikelyGlobalBlockId(resolverId)) {
+    return false;
+  }
+
+  const block = state.blocks.get(resolverId);
+  if (!block) {
+    return false;
+  }
+
+  const blockResolverType = getResolverTypeFromId(block.resolverId);
+  return blockResolverType === "sections" || blockResolverType === "pages";
+}
+
+function getPageBlockIdByPath<TContext extends ResolverContext>(
+  state: State<TContext & WebContext>,
+  pathname: string,
+): ResolverId | null {
+  for (const [blockId, block] of state.blocks.entries()) {
+    const resolverType = getResolverTypeFromId(block.resolverId);
+    if (resolverType !== "pages") {
+      continue;
+    }
+
+    const blockPath = (block.props as { path?: unknown } | undefined)?.path;
+    if (typeof blockPath === "string" && normalizePathname(blockPath) === pathname) {
+      return blockId as ResolverId;
+    }
+  }
+
+  return null;
+}
+
 export function createInvokeHandler<TContext extends ResolverContext>(
   state: State<TContext & WebContext>,
   options: InvokeRouterOptions = {},
@@ -65,20 +121,24 @@ export function createInvokeHandler<TContext extends ResolverContext>(
     >,
   ): Promise<Response> {
     const url = new URL(request.url);
-    const pathname = url.pathname.endsWith("/")
-      ? url.pathname.slice(0, -1)
-      : url.pathname;
+    const pathname = normalizePathname(url.pathname);
+    let resolverId: ResolverId;
 
-    if (!pathname.startsWith(basePath)) {
-      return new Response("Not Found", { status: 404 });
+    if (pathname.startsWith(basePath)) {
+      const resolverPath = pathname.slice(basePath.length).replace(/^\/+/, "");
+      if (!resolverPath) {
+        return new Response("Resolver path is required", { status: 400 });
+      }
+      resolverId = resolverPath as ResolverId;
+    } else {
+      const pageBlockId = getPageBlockIdByPath(state, pathname);
+      if (!pageBlockId) {
+        return new Response("Not Found", { status: 404 });
+      }
+      resolverId = pageBlockId;
     }
 
-    const resolverPath = pathname.slice(basePath.length).replace(/^\/+/, "");
-    if (!resolverPath) {
-      return new Response("Resolver path is required", { status: 400 });
-    }
-
-    const resolverId = resolverPath as ResolverId;
+    const shouldReturnHtml = isSectionsResolverRequest(state, resolverId);
     const props = await readProps(request);
 
     try {
@@ -86,6 +146,15 @@ export function createInvokeHandler<TContext extends ResolverContext>(
         ...ctx,
         request,
       } as TContext & WebContext);
+
+      if (shouldReturnHtml && typeof resolved === "string") {
+        return new Response(resolved, {
+          headers: {
+            "content-type": "text/html; charset=utf-8",
+          },
+        });
+      }
+
       return toResponse(resolved);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Internal Error";

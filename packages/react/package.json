@@ -1,0 +1,17 @@
+{
+  "name": "@block-resolver/react",
+  "version": "0.0.0",
+  "type": "module",
+  "module": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@block-resolver/core": "workspace:*",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

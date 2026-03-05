@@ -11,11 +11,19 @@
         "typescript": "^5",
       },
     },
+    "app-example": {
+      "name": "@app-example/app-example",
+      "version": "1.0.0",
+      "dependencies": {
+        "@block-resolver/core": "workspace:*",
+      },
+    },
     "example": {
       "name": "example",
       "version": "1.0.0",
       "dependencies": {
         "@block-resolver/core": "workspace:*",
+        "@block-resolver/react": "workspace:*",
         "@block-resolver/web": "workspace:*",
         "react": "^19.2.4",
         "react-dom": "^19.2.4",
@@ -28,6 +36,21 @@
     "packages/core": {
       "name": "@block-resolver/core",
       "version": "0.0.0",
+      "bin": {
+        "block-resolver-manifest": "./src/cli/generate-manifest.ts",
+      },
+      "peerDependencies": {
+        "typescript": "^5",
+      },
+    },
+    "packages/react": {
+      "name": "@block-resolver/react",
+      "version": "0.0.0",
+      "dependencies": {
+        "@block-resolver/core": "workspace:*",
+        "react": "^19.2.0",
+        "react-dom": "^19.2.0",
+      },
       "peerDependencies": {
         "typescript": "^5",
       },
@@ -44,7 +67,11 @@
     },
   },
   "packages": {
+    "@app-example/app-example": ["@app-example/app-example@workspace:app-example"],
+
     "@block-resolver/core": ["@block-resolver/core@workspace:packages/core"],
+
+    "@block-resolver/react": ["@block-resolver/react@workspace:packages/react"],
 
     "@block-resolver/web": ["@block-resolver/web@workspace:packages/web"],
 

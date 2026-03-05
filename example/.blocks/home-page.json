@@ -1,11 +1,23 @@
 {
-  "resolverId": "example/pages/Page.tsx",
+  "resolverId": "example/pages/Page",
   "props": {
     "path": "/",
     "name": "Home Page",
     "sections": [
       {
-        "resolverId": "example/sections/home.tsx"
+        "resolverId": "Header"
+      },
+      {
+        "resolverId": "example/sections/shelf",
+        "props": {
+          "products": {
+            "resolverId": "example/loaders/products/by-query",
+            "props": {
+              "count": 6,
+              "query": "patagonia"
+            }
+          }
+        }
       }
     ]
   }

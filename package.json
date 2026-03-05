@@ -3,9 +3,13 @@
   "private": true,
   "module": "index.ts",
   "type": "module",
+  "scripts": {
+    "manifest:generate": "bun ./scripts/generate-manifest.ts"
+  },
   "workspaces": [
     "packages/*",
-    "example"
+    "example",
+    "app-example"
   ],
   "devDependencies": {
     "@types/bun": "latest"

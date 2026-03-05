@@ -2,8 +2,13 @@
   "name": "example",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "dev": "bun ./index.ts",
+    "manifest:generate": "bunx block-resolver-manifest ."
+  },
   "dependencies": {
     "@block-resolver/core": "workspace:*",
+    "@block-resolver/react": "workspace:*",
     "@block-resolver/web": "workspace:*",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
