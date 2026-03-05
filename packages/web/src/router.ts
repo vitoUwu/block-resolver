@@ -9,6 +9,15 @@ export interface InvokeRouterOptions {
   basePath?: string;
 }
 
+export interface BunServeFetchOptions<TContext extends ResolverContext>
+  extends InvokeRouterOptions {
+  getContext?: (
+    request: Request,
+  ) =>
+    | Omit<TContext & WebContext, "request">
+    | Promise<Omit<TContext & WebContext, "request">>;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
 }
@@ -42,10 +51,6 @@ function toResponse(result: unknown): Response {
   return Response.json(result ?? null);
 }
 
-export function createInvokeHandler(
-  state: State<WebContext>,
-  options?: InvokeRouterOptions,
-): (request: Request, ctx?: Record<string, unknown>) => Promise<Response>;
 export function createInvokeHandler<TContext extends ResolverContext>(
   state: State<TContext & WebContext>,
   options: InvokeRouterOptions = {},
@@ -86,5 +91,18 @@ export function createInvokeHandler<TContext extends ResolverContext>(
       const message = error instanceof Error ? error.message : "Internal Error";
       return Response.json({ error: message }, { status: 500 });
     }
+  };
+}
+
+export function createBunServeFetch<TContext extends ResolverContext>(
+  state: State<TContext & WebContext>,
+  options: BunServeFetchOptions<TContext> = {},
+) {
+  const { getContext, ...invokeOptions } = options;
+  const invoke = createInvokeHandler<TContext>(state, invokeOptions);
+
+  return async function bunFetch(request: Request): Promise<Response> {
+    const ctx = getContext ? await getContext(request) : undefined;
+    return invoke(request, ctx);
   };
 }
