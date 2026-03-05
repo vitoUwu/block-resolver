@@ -198,6 +198,7 @@ export async function installConfiguredApps<TContext extends ResolverContext>(
   };
 
   for (const blockId of installedBlocks) {
+    const appStartAt = performance.now();
     const result = await state.resolve(
       blockId as ResolverId,
       {},
@@ -215,6 +216,10 @@ export async function installConfiguredApps<TContext extends ResolverContext>(
       state: result.state,
       ctx: result.ctx,
     };
+    const appDurationMs = performance.now() - appStartAt;
+    console.log(
+      `[apps] instantiated "${blockId}" (${resolverId}) in ${appDurationMs.toFixed(2)}ms`,
+    );
 
     instances[blockId] = runtime;
     mergedContext = {

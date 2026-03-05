@@ -31,6 +31,33 @@ Reference installable app used by `example`.
 - `ctx.appExample.state.startedAt`
 - `ctx.client` (convenience alias)
 
+## Secret and encryption flow
+
+`token` typically points to `app-example/loaders/encrypted`, which resolves in
+this order:
+
+1. `process.env[name]` (for example `APP_EXAMPLE_TOKEN`)
+2. `props.value` (plain fallback)
+3. decrypt `props.encrypted` using `APP_EXAMPLE_CRYPTO_KEY`
+
+Encryption format: `<ivHex>:<cipherHex>`.
+
+Environment variables:
+
+- `APP_EXAMPLE_TOKEN` (optional direct token override)
+- `APP_EXAMPLE_CRYPTO_KEY` (required for decrypt/encrypt helpers)
+
+## Generating encrypted values
+
+Invoke action `app-example/actions/secrets/encrypt` with:
+
+```json
+{ "value": "my-token" }
+```
+
+Use returned `{ "value": "<encrypted>" }` as `token.props.encrypted` inside
+`example/.blocks/app-example.json`.
+
 ## Coding guidelines
 
 - Keep API clients and cross-resolver dependencies in `init`, not duplicated in
@@ -47,3 +74,9 @@ This app is installed by the site (`example`) using:
 1. `example/apps/app-example.ts` export bridge
 2. `example/.blocks/app-example.json` with `resolverId: "core/apps/app-example"`
 3. `example/block-resolver.app.json` with `"apps": ["app-example"]`
+
+## Manifest generation
+
+```bash
+bun run manifest:generate
+```

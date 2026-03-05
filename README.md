@@ -32,6 +32,7 @@ imports/parsing in server startup.
 `example/apps/app-example.ts`
 
 ```ts
+export { manifestRegistry } from "../../app-example/manifest.gen.ts";
 export { default } from "../../app-example/mod.ts";
 ```
 
@@ -69,6 +70,33 @@ const installed = await installConfiguredApps(state, {
 ```
 
 Use `installed.ctx` when building request context.
+
+## Runtime lifecycle
+
+1. `init(...)` loads `.blocks`, writes manifests by default, and hydrates
+   resolvers.
+2. `installConfiguredApps(...)` registers `core/apps/*` resolvers from
+   `example/apps/*`, resolves installed app blocks, and merges app contexts.
+3. Plugins are applied (`webPlugin`, `reactSectionsPlugin`).
+4. HTTP requests are resolved via `/invoke/*` or page-path mapping.
+
+## Manifest generation
+
+Preferred commands:
+
+```bash
+# from each app directory
+bun run manifest:generate
+
+# from monorepo root targeting a workspace
+bun run --cwd example manifest:generate
+bun run --cwd app-example manifest:generate
+```
+
+Generated files:
+
+- `manifest.gen.ts`
+- `manifest.types.gen.ts`
 
 ## App coding model (`mod.ts`)
 

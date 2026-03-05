@@ -36,15 +36,24 @@ Then set `ctx.sectionRenderer` / `ctx.pageRenderer` to select it.
 
 ```ts
 import type { WebContext } from "@block-resolver/web";
-import type { GeneratedResolverContext } from "../manifest.types.gen";
+import type { ResolverContext } from "../manifest.types.gen";
 
-type Ctx = GeneratedResolverContext<WebContext>;
+type Ctx = ResolverContext<WebContext>;
 ```
 
 This gives both:
 
 - typed invoke/cache runtime helpers from manifest types
 - `request` from web plugin
+
+## Renderer selection rules
+
+- Sections use `ctx.sectionRenderer ?? "react"`.
+- Pages use `ctx.pageRenderer ?? ctx.sectionRenderer ?? "react"`.
+- Registering the same renderer ID more than once is ignored (first
+  registration wins).
+- If no renderer is registered for the selected ID, resolving sections/pages
+  throws.
 
 ## Main export
 

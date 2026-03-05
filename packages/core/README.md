@@ -50,6 +50,7 @@ App installation is block-driven and first-party:
 `example/apps/app-example.ts`
 
 ```ts
+export { manifestRegistry } from "../../app-example/manifest.gen.ts";
 export { default } from "../../app-example/mod.ts";
 ```
 
@@ -123,6 +124,36 @@ const installedApps = await installConfiguredApps(baseState, {
 });
 
 // installedApps.ctx -> merged app context for request handling
+```
+
+## Resolver and block resolution semantics
+
+- Resolver IDs follow `<app>/<type>/<id>`.
+- Global block IDs (for example `Header` or `home-page`) are resolved from
+  `.blocks/<id>.json`.
+- Nested resolvables (`{ resolverId, props }`) are resolved recursively inside
+  props/state.
+- Missing blocks/resolvers resolve to a `null-reference` object instead of
+  throwing.
+
+## Manifest generation behavior
+
+- `init(...)` uses `writeManifestFiles: true` by default.
+- Runtime generator scans app roots (folders containing
+  `block-resolver.app.json`) and emits:
+  - `manifest.gen.ts`
+  - `manifest.types.gen.ts`
+- Resolver folders included in generation:
+  - `loaders`, `actions`, `sections`, `pages`
+
+CLI options:
+
+```bash
+# from app directory
+bun run manifest:generate
+
+# or directly
+bunx block-resolver-manifest .
 ```
 
 ## Coding guidelines for app authors
