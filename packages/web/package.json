@@ -1,0 +1,15 @@
+{
+  "name": "@block-resolver/web",
+  "version": "0.0.0",
+  "type": "module",
+  "module": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@block-resolver/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

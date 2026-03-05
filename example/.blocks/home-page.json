@@ -1,0 +1,12 @@
+{
+  "resolverId": "example/pages/Page.tsx",
+  "props": {
+    "path": "/",
+    "name": "Home Page",
+    "sections": [
+      {
+        "resolverId": "example/sections/home.tsx"
+      }
+    ]
+  }
+}
