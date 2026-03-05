@@ -3,6 +3,7 @@ import type {
   ResolverId,
   State,
 } from "../../core/src/index";
+import type { WebContext } from "./plugin";
 
 export interface InvokeRouterOptions {
   basePath?: string;
@@ -42,14 +43,21 @@ function toResponse(result: unknown): Response {
 }
 
 export function createInvokeHandler(
-  state: State,
+  state: State<WebContext>,
+  options?: InvokeRouterOptions,
+): (request: Request, ctx?: Record<string, unknown>) => Promise<Response>;
+export function createInvokeHandler<TContext extends ResolverContext>(
+  state: State<TContext & WebContext>,
   options: InvokeRouterOptions = {},
 ) {
   const basePath = normalizeBasePath(options.basePath ?? "/invoke");
 
   return async function handleInvoke(
     request: Request,
-    ctx: Omit<ResolverContext, "request"> = {},
+    ctx: Omit<TContext & WebContext, "request"> = {} as Omit<
+      TContext & WebContext,
+      "request"
+    >,
   ): Promise<Response> {
     const url = new URL(request.url);
     const pathname = url.pathname.endsWith("/")
@@ -72,7 +80,7 @@ export function createInvokeHandler(
       const resolved = await state.resolve(resolverId, props, {
         ...ctx,
         request,
-      });
+      } as TContext & WebContext);
       return toResponse(resolved);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Internal Error";

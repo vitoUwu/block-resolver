@@ -12,14 +12,14 @@ function isLikelyGlobalResolverId(resolverId: string): boolean {
   return !!appName && !resolverType && rest.length === 0;
 }
 
-export async function resolveBlock(
+export async function resolveBlock<TContext extends ResolverContext>(
   resolverId: ResolverId,
   props: Record<string, unknown>,
   options: {
     blocks: Blocks;
-    resolvers: Resolvers;
+    resolvers: Resolvers<TContext>;
   },
-  ctx: ResolverContext = {},
+  ctx: TContext,
 ): Promise<JsonLike | Response> {
   if (isLikelyGlobalResolverId(resolverId)) {
     const block = options.blocks.get(resolverId);

@@ -8,20 +8,26 @@ export type ResolverId<
   TIdentifier extends string = string,
 > = `${TAppName}/${TResolverType}/${TIdentifier}` | (string & {});
 
-export interface ResolverContext {
-  request?: Request;
-  [key: string]: unknown;
-}
+export type ResolverContext = object;
+export type EmptyContext = Record<never, never>;
 
-export type Resolver = {
+export type Resolver<TContext extends ResolverContext = EmptyContext> = {
   type: ResolverType;
   id: ResolverId;
   resolve: (
     props: Record<string, unknown>,
-    ctx: ResolverContext,
+    ctx: TContext,
   ) => Promise<JsonLike | Response> | JsonLike | Response;
 };
 
-export type Resolvers = Map<ResolverType, Map<ResolverId, Resolver>>;
-export type ResolverConstructor = new (id: ResolverId, module: any) => Resolver;
-export type ResolverClass = ResolverConstructor & { type: ResolverType };
+export type Resolvers<TContext extends ResolverContext = EmptyContext> = Map<
+  ResolverType,
+  Map<ResolverId, Resolver<TContext>>
+>;
+
+export type ResolverConstructor<
+  TContext extends ResolverContext = EmptyContext,
+> = new (id: ResolverId, module: any) => Resolver<TContext>;
+
+export type ResolverClass<TContext extends ResolverContext = EmptyContext> =
+  ResolverConstructor<TContext> & { type: ResolverType };

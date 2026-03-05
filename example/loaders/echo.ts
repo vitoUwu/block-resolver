@@ -1,14 +1,12 @@
+import type { WebContext } from "@block-resolver/web";
+
 interface Props {
   message: string;
 }
 
-interface EchoCtx {
-  request?: Request;
-}
-
-export default function echo(props: Props, ctx: EchoCtx) {
+export default function echo(props: Props, ctx: WebContext) {
   return {
     message: props.message,
-    requestPath: ctx.request ? new URL(ctx.request.url).pathname : null,
+    requestPath: new URL(ctx.request.url).pathname,
   };
 }

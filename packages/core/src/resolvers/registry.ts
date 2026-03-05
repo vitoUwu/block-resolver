@@ -3,25 +3,29 @@ import { join } from "path";
 import { ROOT } from "../constants";
 import { LoaderResolver } from "./loader";
 import type {
+  EmptyContext,
+  ResolverContext,
   ResolverClass,
   ResolverId,
   Resolvers,
   ResolverType,
 } from "./types";
 
-export const resolverClasses: Map<ResolverType, ResolverClass> = new Map([
-  [LoaderResolver.type, LoaderResolver],
+export const resolverClasses: Map<ResolverType, ResolverClass<any>> = new Map([
+  [LoaderResolver.type, LoaderResolver as ResolverClass<any>],
 ]);
 
-export function registerResolver(resolverClass: ResolverClass) {
+export function registerResolver(resolverClass: ResolverClass<any>) {
   if (resolverClasses.has(resolverClass.type)) return;
   resolverClasses.set(resolverClass.type, resolverClass);
 }
 
-export async function loadResolvers(): Promise<Resolvers> {
-  const resolversMap: Resolvers = new Map();
+export async function loadResolvers<
+  TContext extends ResolverContext = EmptyContext,
+>(): Promise<Resolvers<TContext>> {
+  const resolversMap: Resolvers<TContext> = new Map();
 
-  for (const [type, ResolverClass] of resolverClasses.entries()) {
+  for (const [type, resolverClass] of resolverClasses.entries()) {
     let files: string[] = [];
     try {
       files = await readdir(join(ROOT, type));
@@ -40,7 +44,10 @@ export async function loadResolvers(): Promise<Resolvers> {
       const resolverId: ResolverId = `app/${type}/${file
         .replace(".ts", "")
         .replace(".js", "")}`;
-      resolversMap.get(type)!.set(resolverId, new ResolverClass(resolverId, module));
+      const typedResolverClass = resolverClass as ResolverClass<TContext>;
+      resolversMap
+        .get(type)!
+        .set(resolverId, new typedResolverClass(resolverId, module));
     }
   }
 

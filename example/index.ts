@@ -1,7 +1,8 @@
 import { init } from "@block-resolver/core";
-import { createInvokeHandler } from "@block-resolver/web";
+import { createInvokeHandler, webPlugin } from "@block-resolver/web";
 
-const state = await init();
+const baseState = await init();
+const state = await baseState.use(webPlugin());
 
 const directResult = await state.resolve(
   "app/loaders/echo",

@@ -1,5 +1,6 @@
 import type { JsonLike } from "../utils/types";
 import type {
+  EmptyContext,
   Resolver,
   ResolverContext,
   ResolverId,
@@ -8,10 +9,10 @@ import type {
 
 type LoaderCacheType = "stale-while-revalidate" | "no-cache" | "no-store";
 
-interface LoaderModule {
+interface LoaderModule<TContext extends ResolverContext = EmptyContext> {
   default: (
     props: Record<string, unknown>,
-    ctx: ResolverContext,
+    ctx: TContext,
   ) => Promise<JsonLike | Response> | JsonLike | Response;
   cache?: {
     type: LoaderCacheType;
@@ -20,7 +21,9 @@ interface LoaderModule {
   };
 }
 
-export class LoaderResolver implements Resolver {
+export class LoaderResolver<TContext extends ResolverContext = EmptyContext>
+  implements Resolver<TContext>
+{
   public static type: ResolverType = "loaders";
 
   get type(): ResolverType {
@@ -29,12 +32,12 @@ export class LoaderResolver implements Resolver {
 
   constructor(
     public id: ResolverId,
-    public module: LoaderModule,
+    public module: LoaderModule<TContext>,
   ) {}
 
   public resolve(
     props: Record<string, unknown>,
-    ctx: ResolverContext,
+    ctx: TContext,
   ): Promise<JsonLike | Response> | JsonLike | Response {
     return this.module.default(props, ctx);
   }
